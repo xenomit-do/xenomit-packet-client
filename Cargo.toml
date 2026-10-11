@@ -1,0 +1,17 @@
+[package]
+name = "xenomit-packet-client"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Packet-level DarkOrbit game client: wire codec, session state machine, world model, xenomit-game-api adapter"
+
+[features]
+default = []
+game-api = ["dep:xenomit-game-api", "dep:serde_json"]
+
+[dependencies]
+base64 = "0.22"
+serde_json = { version = "1", optional = true }
+thiserror = "2"
+xenomit-game-api = { path = "../xenomit-game-api", optional = true }
+zeroize = "1"

@@ -1,0 +1,20 @@
+/target
+# Never commit captures or session material
+*.pcapng
+*.pcap
+*.bin
+*.messages.jsonl
+
+# Machine-local state and downloaded assets
+/target*/
+/.next/
+/.xenomit-assets/
+/asset-catalog/
+/runtime/
+/build/
+/.smoke-token.txt
+/.orchestrator-dev.json
+.env
+.env.local
+*.pem
+*.key
