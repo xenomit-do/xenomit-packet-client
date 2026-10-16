@@ -142,6 +142,7 @@ dependencies = [
 [[package]]
 name = "xenomit-game-api"
 version = "0.1.0"
+source = "git+https://github.com/xenomit-do/xenomit-game-api?tag=v0.1.0#60c27a5c48fbae0817c2dc8d205fdffda61ea60d"
 dependencies = [
  "roxmltree",
  "serde",
