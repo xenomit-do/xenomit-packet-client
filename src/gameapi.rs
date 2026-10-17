@@ -402,6 +402,35 @@ impl GameClient for PacketGameClient {
                     })
                     .collect()
             }),
+            // Packet captures expose menu inventory and kill-screen offers,
+            // but do not include client-side keyboard bindings or abilities.
+            slot_bar: None,
+            revive_options: w.kill_screen.as_ref().map(|screen| {
+                screen
+                    .options
+                    .iter()
+                    .map(|option| xenomit_game_api::ReviveOption {
+                        repair_type: option.repair_type,
+                        // Packet captures expose repair types and costs, but
+                        // not the destination semantics for non-basic options.
+                        // Only the protocol's known free basic repair is a base
+                        // repair; other entries must not be guessed into one.
+                        location: if option.repair_type == REPAIR_TYPE_BASIC {
+                            xenomit_game_api::ReviveLocation::Base
+                        } else {
+                            xenomit_game_api::ReviveLocation::Unknown
+                        },
+                        visible: true,
+                        free: option.cost == 0,
+                        affordable: option.affordable,
+                        cooldown_ms: Some(option.cooldown_ms.max(0) as u64),
+                    })
+                    .collect()
+            }),
+            repair_inventory: None,
+            abilities: None,
+            drones: None,
+            group: None,
         })
     }
 
@@ -802,6 +831,31 @@ fn command_packet(
                 return Err(invalid("group inviter id is missing"));
             }
             modules::invitation_accept_request(*inviter_id)
+        }
+        GameCommand::ReviveAt { repair_type, location } => {
+            if *location != xenomit_game_api::ReviveLocation::Base {
+                return Err(unavailable(
+                    "packet backend only supports an observed free base repair",
+                ));
+            }
+            // Reuse the established observed-option validation, including
+            // affordability and cooldown checks, through the legacy variant.
+            return command_packet(
+                world,
+                login,
+                &GameCommand::Revive {
+                    repair_type: *repair_type,
+                },
+            );
+        }
+        GameCommand::RepairDrones
+        | GameCommand::InviteGroupMember { .. }
+        | GameCommand::LeaveGroup
+        | GameCommand::KickGroupMember { .. }
+        | GameCommand::SetGroupInvites { .. } => {
+            return Err(unavailable(
+                "this manager operation is not implemented by the packet backend",
+            ));
         }
         GameCommand::SellOre { ore_type, amount } => {
             if !sellable_ore(*ore_type) {
